@@ -1,0 +1,68 @@
+extends layout
+block content
+ h2 Class 10 books
+ br
+ h2 Maths
+ br 
+ h3 Chapters in English
+ h4
+  each val in mathEnglish
+   p
+   | #{val.engch} &nbsp 
+   a(href=val.englk) #{val.englk} 
+ br
+ h3 Chapters in Hindi
+ h4
+  each val in mathHindi
+   p
+   | #{val.hindich} &nbsp
+   a(href=val.hindilk) #{val.hindilk}
+ br
+ h2 Science
+ h3 Chapters in English
+ h4
+  each val in scienceEnglish
+   p
+   | #{val.engch} &nbsp 
+   a(href=val.englk) #{val.englk}
+ br
+ h3 Chapters in Hindi
+ h4
+  each val in scienceHindi
+   p
+   | #{val.hindich} &nbsp
+   a(href=val.hindilk) #{val.hindilk}
+ br
+ h2 Social science
+ h3 Chapters in English
+ h4
+  each val in socialscEnglish
+   p
+   | #{val.engch} &nbsp 
+   a(href=val.englk) #{val.englk}
+ br
+ h3 Chapters in Hindi
+ h4
+  each val in socialscHindi
+   p
+   | #{val.hindich} &nbsp
+   a(href=val.hindilk) #{val.hindilk}
+ br
+ h2 Hindi
+ br
+ h3 Chapters-
+ h4
+  each val in hindi
+   p
+   | #{val.hindich} &nbsp
+   a(href=val.hindilk) #{val.hindilk}
+ br
+ h2 English
+ br
+ h3 Chapters-
+ h4
+  each val in english
+   p
+   | #{val.englishch} &nbsp
+   a(href=val.englishlk) #{val.englishlk}
+ 
