@@ -1,10 +1,10 @@
 const axios = require("axios");
 const fs = require("fs");
-const Path=require("path");
+const Path = require("path");
 const getResults = require("./scraper");
 const createCsvWriter=require('csv-writer').createObjectCsvWriter;
 const csvWriter = createCsvWriter({
-	path: 'store.csv', //path of the CSV file
+	path: 'store2.csv', //path of the CSV file
 	header: [ //heeaders of the CSV file
 		{id:'subject', title:'Subject'},
 		{id:'eng_chap', title:'English_Chapter'},
@@ -15,7 +15,7 @@ const csvWriter = createCsvWriter({
 });
 let retdata = []; //array to store values extracted from the CSV file
 let low=0; //variable to store index of link for downloading 
-let high=1; //variable to store index of next link for downloading
+let high=5; //variable to store index of next link for downloading
 let complete=0; //variable to store the number of files downloaded 
 let chno=0; //variable that stores the chapter number
 let currSubject=''; //variable that holds the current Subject whose chapters are being downloaded
@@ -34,7 +34,7 @@ async function dwnld (url1,fold,nm) { //function to download the files from the 
 		response.data.on('end',() => {
 			complete=complete+1; //incrementing the number of files downloaded
 			console.log(`Downloaded : ${fold}/${nm}`);
-			console.log(` ${complete} Chapters Downloads Finsihed`);
+			console.log(` ${complete} Chapters Downloaded`);
 	 		resolve()
 		}) 
 		response.data.on('error',(err)=>{
@@ -42,7 +42,6 @@ async function dwnld (url1,fold,nm) { //function to download the files from the 
 		})
 	})	
 };
-
 async function storedata(){ //function for storing data in a CSV file
 	const result = await getResults();
 	const record = []; //array to store values extracted from allSubjects array 
@@ -55,8 +54,60 @@ async function storedata(){ //function for storing data in a CSV file
 		});
 	})
 	csvWriter.writeRecords(record).then(()=>console.log("CSV Written Succesfully")); //writing to the CSV file
-}
-	
+}	
+const startDownload= async () => { //function for downloading files 
+	let promises=[]; //array to store a file to be downloaded
+	for(let i=low;i<high;i++)
+	{		
+		if(currSubject!==retdata[i].Subject) //Checking if the Subject has changed  
+		{
+			chno=1;
+			currSubject= retdata[i].Subject; //making the new subject as the current Subject
+			eng_part='';
+			hindi_part='';
+		}
+		if((!retdata[i].English_Link)&&(!retdata[i].Hindi_Link)) //Checking if the Subject has a subpart(unit) or not
+		{
+			chno=0;
+			eng_part=retdata[i].English_Chapter;
+			hindi_part=retdata[i].Hindi_Chapter;
+		}
+		if(retdata[i].English_Link) //Checking if the subject has only a link for the English Chapters
+		{
+			promises.push(dwnld(retdata[i].English_Link, retdata[i].Subject, eng_part+`-Chapter-${chno}(in-English).pdf`).catch((err)=>{console.log(err.message)}));
+		}
+		if(retdata[i].Hindi_Link) //Checking if the subject has only a link for the Hindi Chapters
+		{
+			promises.push(dwnld(retdata[i].Hindi_Link, retdata[i].Subject, hindi_part+`-Chapter-${chno}(in-Hindi).pdf`).catch((err)=>{console.log(err.message)}));
+		}
+		chno=chno+1; //incrementing the chapter number
+	}
+	await Promise.all(promises)
+	.then(()=>{ //if all files for a batch are downloaded then displaying the message and calling the startDownload function to download the next batch
+		low=high;
+		high=high+5;
+		if(high>retdata.length)
+		{
+			high=retdata.length;
+		}
+		if(low<retdata.length)
+		{
+			startDownload();
+		}		
+	})
+	.catch((err)=>{ //if any of the file for a batch is not able to downloaded then displaying the message and calling the startDownload function to download the next batch
+		low=high;
+		high=high+5;
+		if(high>retdata.length)
+		{
+			high=retdata.length;
+		}
+		if(low<retdata.length)
+		{
+			startDownload();
+		}
+	});
+}	
 const getdata = async ()=> { //function to extract data from the CSV file
 	await storedata();
 	const csv = require('csv-parser');
@@ -75,78 +126,5 @@ const getdata = async ()=> { //function to extract data from the CSV file
 		reject(err)
 	});
 }
-const startDownload= async () => { //function for downloading files 
-	let promises=[]; //array to store a batch of files to be downloaded
-	for(let i=low;i<high;i++)
-	{
-		if(currSubject!==retdata[i].Subject) //Checking if the Subject has changed  
-		{
-			chno=1;
-			currSubject= retdata[i].Subject; //making the new subject as the current Subject
-			eng_part='';
-			hindi_part='';
-		}
-		if((!retdata[i].English_Link)&&(!retdata[i].Hindi_Link)) //Checking if the Subject has a subpart(unit) or not
-		{
-			chno=1;
-			eng_part=retdata[i].English_Chapter;
-			hindi_part=retdata[i].Hindi_Chapter;
-		}
-		if(retdata[i].English_Link&&retdata[i].Hindi_Link) //Checking if the subject has both the English as well as Hindi Links
-		{
-			if(c===0)
-			{
-				promises.push(dwnld(retdata[i].English_Link, retdata[i].Subject, eng_part+`-Chapter-${chno}(in-English).pdf`));	
-				high=high-1;
-				c=1;
-			}
-			else
-			{
-				promises.push(dwnld(retdata[i].Hindi_Link, retdata[i].Subject, hindi_part+`-Chapter-${chno}(in-Hindi).pdf`));
-				c=0;
-				chno=chno+1; //incrementing the chapter number
-			}
-		}
-		else if(retdata[i].English_Link) //Checking if the subject has only a link for the English Chapters
-		{
-			promises.push(dwnld(retdata[i].English_Link, retdata[i].Subject, eng_part+`-Chapter-${chno}(in-English).pdf`));
-			chno=chno+1; //incrementing the chapter number
-		}
-		else if(retdata[i].Hindi_Link) //Checking if the subject has only a link for the Hindi Chapters
-		{
-			promises.push(dwnld(retdata[i].Hindi_Link, retdata[i].Subject, hindi_part+`-Chapter-${chno}(in-Hindi).pdf`));
-			chno=chno+1; //incrementing the chapter number
-		}
-	}
-	await Promise.all(promises)
-	.then(()=>{ //if all files for a batch are downloaded then displaying the message and calling the startDownload function to download the next batch
-		low=high;
-		high=high+1;
-		if(high>retdata.length)
-		{
-			high=retdata.length;
-		}
-		if(low<retdata.length)
-		{
-			startDownload();
-		}
-		
-	})
-	.catch((err)=>{ //if any of the file for a batch is not able to downloaded then displaying the message and calling the startDownload function to download the next batch
-		console.log(`Error in downloading ${err}`);
-		low=high;
-		high=high+1;
-		if(high>retdata.length)
-		{
-			high=retdata.length;
-		}
-		if(low<retdata.length)
-		{
-			startDownload();
-		}
-	});
-	
-}	
 getdata();
 //module.exports = getdata;
-
