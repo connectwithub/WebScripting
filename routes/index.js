@@ -1,15 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const getResults = require("../scraper");
-const getdata = require("../down");
-
+const getResults = require("../util/scraper");
+const stdown = require("../controller/downn.js");
 /* GET home page. */
 router.get("/", async function(req, res, next) {
   const result = await getResults();
   res.render("index", result);
+  stdown();
 });
-router.get("/", async function(req, res, next) {
-  getdata();
-});
-
 module.exports = router;
