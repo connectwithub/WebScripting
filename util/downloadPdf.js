@@ -2,6 +2,7 @@ const axios = require("axios");
 const fs = require("fs");
 const Path = require("path");
 const config = require("./../config/config");
+const updateData = require("./update-CSVstatus");
 let low=0; //variable to store starting index of batch of files for downloading 
 let high=5; //variable to store one more than last index of batch of files for downloading
 let complete=0; //variable to store the number of files downloaded 
@@ -9,8 +10,10 @@ let chno=0; //variable that stores the chapter number
 let currSubject=''; //variable that holds the current Subject whose chapters are being downloaded
 let eng_part; //variable to store the English subpart of the Subject
 let hindi_part; //variable to store the Hindi subpart of the Subject
-async function dwnld (url1,fold,nm) { //function to download the files from the url1 and store them in the specified path		
-	const path=Path.resolve(`${config.downloadpath.folder}\\\\${fold}`,nm); //path where downloaded PDFs will be stored
+let eng_down_status = [];
+let hindi_down_status = [];
+async function dwnld (url1,subfold,nm) { //function to download the files from the url1 and store them in the specified path		
+	const path=Path.resolve(`${config.downloadpath.folder}\\\\${subfold}`,nm); //path where downloaded PDFs will be stored
 	const response = await axios({ //initializing axios instance with the url, 'GET' method and stream value for responseType 
 		method: 'GET',
 		url: url1,
@@ -20,7 +23,7 @@ async function dwnld (url1,fold,nm) { //function to download the files from the 
 	return new Promise((resolve,reject) => {
 		response.data.on('end',() => {
 			complete=complete+1; //incrementing the number of files downloaded
-			console.log(`Downloaded : ${fold}/${nm}`);
+			console.log(`Downloaded : ${subfold}/${nm}`);
 			console.log(` ${complete} Chapters Downloaded`);
 	 		resolve()
 		}) 
@@ -32,7 +35,9 @@ async function dwnld (url1,fold,nm) { //function to download the files from the 
 const startDownload= async (retdata) => { //function for downloading files 
 	let promises=[]; //array to store a file to be downloaded
 	for(let i=low;i<high;i++)
-	{		
+	{	
+		eng_down_status[i] = undefined;
+		hindi_down_status[i] = undefined;
 		if(currSubject!==retdata[i].Subject) //Checking if the Subject has changed  
 		{
 			chno=1;
@@ -48,11 +53,17 @@ const startDownload= async (retdata) => { //function for downloading files
 		}
 		if(retdata[i].English_Link) //Checking if the subject has a link for the English Chapters
 		{
-			promises.push(dwnld(retdata[i].English_Link, retdata[i].Subject, eng_part+`-Chapter-${chno}(in-English).pdf`).catch((err)=>{console.log(err.message)}));
+			promises.push(dwnld(retdata[i].English_Link, retdata[i].Subject, eng_part+`-Chapter-${chno}(in-English).pdf`)
+					.then(()=>{eng_down_status[i] = "Downloaded"})
+					.catch((err)=>{eng_down_status[i] = "Error in Downloading";
+					console.log(err.message)}));
 		}
 		if(retdata[i].Hindi_Link) //Checking if the subject has a link for the Hindi Chapters
 		{
-			promises.push(dwnld(retdata[i].Hindi_Link, retdata[i].Subject, hindi_part+`-Chapter-${chno}(in-Hindi).pdf`).catch((err)=>{console.log(err.message)}));
+			promises.push(dwnld(retdata[i].Hindi_Link, retdata[i].Subject, hindi_part+`-Chapter-${chno}(in-Hindi).pdf`)
+					.then(()=> {hindi_down_status[i] = "Downloaded"})
+					.catch((err)=>{hindi_down_status[i] = "Error in Downloading";
+					console.log(err.message)}));
 		}
 		chno=chno+1; //incrementing the chapter number
 	}
@@ -60,26 +71,28 @@ const startDownload= async (retdata) => { //function for downloading files
 	.then(()=>{ //if all files for a batch are downloaded then calling the startDownload function to download the next batch
 		low=high;
 		high=high+5;
-		if(high>retdata.length)
-		{
+		if(high>retdata.length){
 			high=retdata.length;
+			updateStatus(retdata, eng_down_status, hindi_down_status);
 		}
-		if(low<retdata.length)
-		{
+		if(low<retdata.length){
 			startDownload(retdata);
 		}		
 	})
 	.catch((err)=>{ //if any of the file for a batch is not able to downloaded then calling the startDownload function to download the next batch
 		low=high;
 		high=high+5;
-		if(high>retdata.length)
-		{
+		if(high>retdata.length){
 			high=retdata.length;
+			updateStatus(retdata, eng_down_status, hindi_down_status);
 		}
-		if(low<retdata.length)
-		{
+		if(low<retdata.length){
 			startDownload(retdata);
 		}
 	});
+}
+const updateStatus = async (retdata, eng_d_status, hindi_d_status)=>{
+	const up = await updateData(retdata, eng_down_status, hindi_down_status);
+	console.log(up);
 }
 module.exports = startDownload;
