@@ -10,6 +10,7 @@ const getdata = async ()=> { //function to extract data from the CSV file
             retdata.push(data);
         })
         .on('end', () => {
+            //console.log(retdata);
             console.log('CSV file sucessfully parsed');
             resolve(retdata);
         })

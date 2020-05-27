@@ -73,26 +73,32 @@ const startDownload= async (retdata) => { //function for downloading files
 		high=high+5;
 		if(high>retdata.length){
 			high=retdata.length;
-			updateStatus(retdata, eng_down_status, hindi_down_status);
+			return new Promise((resolve, reject)=>{
+				resolve(updateStatus(retdata, eng_down_status, hindi_down_status))
+			})
 		}
 		if(low<retdata.length){
-			startDownload(retdata);
+			return startDownload(retdata);
 		}		
 	})
-	.catch((err)=>{ //if any of the file for a batch is not able to downloaded then calling the startDownload function to download the next batch
+	.catch((err)=>{ //if any of the file for a batch is not able to download then calling the startDownload function to download the next batch
 		low=high;
 		high=high+5;
 		if(high>retdata.length){
 			high=retdata.length;
-			updateStatus(retdata, eng_down_status, hindi_down_status);
+			return new Promise((resolve, reject)=>{
+				resolve(updateStatus(retdata, eng_down_status, hindi_down_status))
+			})
 		}
 		if(low<retdata.length){
-			startDownload(retdata);
+			return startDownload(retdata);
 		}
 	});
 }
-const updateStatus = async (retdata, eng_d_status, hindi_d_status)=>{
-	const up = await updateData(retdata, eng_down_status, hindi_down_status);
-	console.log(up);
+const updateStatus = async (retdata, eng_down_status, hindi_down_status)=>{
+	await updateData(retdata, eng_down_status, hindi_down_status);
+	return new Promise((resolve,reject)=>{
+		resolve(console.log());
+	})
 }
 module.exports = startDownload;

@@ -12,9 +12,11 @@ const csvWriter = createCsvWriter({
 		{id:'hindi_down_status',title:'Hindi_Chapter_Status'},
 	]	
 });
+//async 
 async function updateData(result, eng_down_status, hindi_down_status){ //function for updating data in a CSV file
     let i=0;
 	const record = []; //array to store updated values with the download status in the CSV file 
+	return new Promise((resolve,reject) => {
 	result.forEach(function(item,index){ //reading result array and storing the updated values in record array
 		record.push({ subject: item.Subject,
 					eng_chap: item.English_Chapter,
@@ -26,9 +28,9 @@ async function updateData(result, eng_down_status, hindi_down_status){ //functio
         });
         i=i+1;
 	})
-	csvWriter.writeRecords(record).then(()=>console.log("CSV Updated Succesfully")); //writing to the CSV file
-	return new Promise((resolve,reject) => {
-		resolve(record)
+	csvWriter.writeRecords(record).then(()=>{console.log("CSV Updated Succesfully"); //writing to the CSV file
+		resolve(record);
+	});
 	});
 }
 module.exports = updateData;
