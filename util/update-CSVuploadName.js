@@ -13,25 +13,25 @@ const csvWriter = createCsvWriter({
 		{id:'hindi_down_status',title:'Hindi_Chapter_Status'},
 		{id:'hindi_upload_name',title:'Hindi_Chapter_S3upload_name'},
 	]	
-});
-async function updateData(result, eng_down_status, hindi_down_status){ //function for updating data in a CSV file
+}); 
+async function updateData(result, eng_upload_name, hindi_upload_name){ //function for updating the name with which a file is uploaded in the CSV file
     let i=0;
-	const record = []; //array to store updated values with the download status in the CSV file 
+	const record = []; //array to store updated values having the upload names in the CSV file 
 	return new Promise((resolve,reject) => {
 	result.forEach(function(item,index){ //reading result array and storing the updated values in record array
 		record.push({ subject: item.Subject,
 					eng_chap: item.English_Chapter,
 					eng_link: item.English_Link,
-					eng_down_status: eng_down_status[i],
-					eng_upload_name: undefined,
+					eng_down_status: item.English_Chapter_Status,
+					eng_upload_name: eng_upload_name[i],
 					hindi_chap: item.Hindi_Chapter,
 					hindi_link: item.Hindi_Link,
-					hindi_down_status: hindi_down_status[i],
-					hindi_upload_name: undefined,
+					hindi_down_status: item.Hindi_Chapter_Status,
+					hindi_upload_name: hindi_upload_name[i],
         });
         i=i+1;
 	})
-	csvWriter.writeRecords(record).then(()=>{console.log("CSV Updated Succesfully"); //writing to the CSV file
+	csvWriter.writeRecords(record).then(()=>{console.log("CSV Updated Succesfully"); //writing(updating) to the CSV file
 		resolve(record);
 	});
 	});

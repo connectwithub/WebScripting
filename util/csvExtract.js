@@ -1,8 +1,8 @@
 const fs = require("fs");
 const config = require("./../config/config")
-const csv = require('csv-parser');
-let retdata = []; //array to store data extracted from the CSV file 
+const csv = require('csv-parser'); 
 const getdata = async ()=> { //function to extract data from the CSV file
+    let retdata = []; //array to store data extracted from the CSV file
     return new Promise((resolve,reject)=>{
 	fs.createReadStream(config.csv.path)
         .pipe(csv())
@@ -10,7 +10,6 @@ const getdata = async ()=> { //function to extract data from the CSV file
             retdata.push(data);
         })
         .on('end', () => {
-            //console.log(retdata);
             console.log('CSV file sucessfully parsed');
             resolve(retdata);
         })

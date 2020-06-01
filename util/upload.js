@@ -1,5 +1,6 @@
 const getdata = require('./csvExtract');
 const uploadS3 = require('./upload-S3');
+const updateName = require('./update-CSVuploadName');
 let engchapter_path = ''; //variable to store the path of the file in english(language) to be uploaded
 let hindichapter_path = ''; //variable to store the path of the file in hindi(language) to be uploaded
 let engchapter_awspath; //variable to store the path of the file in english(language) in AWS S3
@@ -10,12 +11,18 @@ let hindi_part;
 let low=0;
 let high=1;
 let uploadedCount = 0; //variable to store the number of files successfully uploaded to AWS S3
+let eng_upload_name = []; // array to store the names with which files (in English) are uploaded to AWS S3 
+let hindi_upload_name = []; // array to store the names with which files (in Hindi) are uploaded to AWS S3
+let s3_Url_english = []; //array to store the Url of the files (in English) uploaded 
+let s3_Url_hindi = []; //array to store the Url of the files (in Hindi) uploaded
 async function upld(filedata){ //function to get the path of the files to be uploaded to AWS S3 and also determine their path in S3
     let promises=[]; //array to store a batch files to be uploaded to AWS S3
 	for(let i=low;i<high;i++)
 	{
 		engchapter_path = '';
-        hindichapter_path = '';
+		hindichapter_path = '';
+		eng_upload_name[i] = undefined;
+		hindi_upload_name[i] = undefined;
         if(currSubject!== filedata[i].Subject) //Finding if the Subject has changed  
 		{
 			chno=1;
@@ -42,9 +49,11 @@ async function upld(filedata){ //function to get the path of the files to be upl
 				{
 					engchapter_awspath = `Class10/${filedata[i].Subject}/${eng_part}${`-Chapter-${chno}(in-English).pdf`}`;	//Determining the path of the file in AWS S3 if the subject is English
 				}
-				promises.push(uploadS3(engchapter_path, engchapter_awspath) //pushing the call to fileupload function in 'upload-S3.js' to the promises array
-							.then(()=>{ 
-								uploadedCount++; 
+				promises.push(uploadS3(engchapter_path, engchapter_awspath, chno) //pushing the call to fileupload function in 'upload-S3.js' to the promises array
+							.then((val)=>{ 
+								uploadedCount++; //incrementing the uploaded files count
+								s3_Url_english.push(val[0]);
+								eng_upload_name[i] = `${eng_part}${`chapter${val[1]}(inEnglish)`}`;
 								console.log(`Total files uploaded - ${uploadedCount}`)
 							})
 							.catch((err)=>{console.log(err)}));
@@ -63,15 +72,17 @@ async function upld(filedata){ //function to get the path of the files to be upl
 				{
 					hindichapter_awspath = `Class10/${filedata[i].Subject}/${hindi_part}${`-Chapter-${chno}(in-Hindi).pdf`}`; //Determining the path of the file in AWS S3 if the subject is Hindi
 				}
-				promises.push(uploadS3(hindichapter_path, hindichapter_awspath) //pushing the call to upload function in 'upload-S3.js' to promise array
-							.then(()=>{ 
-								uploadedCount++;
+				promises.push(uploadS3(hindichapter_path, hindichapter_awspath, chno) //pushing the call to upload function in 'upload-S3.js' to promise array
+							.then((val)=>{ 
+								uploadedCount++; //incrementing the uploaded files count
+								s3_Url_hindi.push(val[0]);
+								hindi_upload_name[i] = `${hindi_part}${`chapter${val[1]}(inHindi)`}`;
 								console.log(`Total files uploaded - ${uploadedCount}`)
 							})
 							.catch((err)=>{console.log(err)}));
 			}
         }
-        chno=chno+1; //incrementing the chapter number
+		chno=chno+1; //incrementing the chapter number
 	}
 	await Promise.all(promises)
 	.then(()=>{ //if all files for a batch are uploaded then calling the 'upld' function to upload the next batch
@@ -81,7 +92,12 @@ async function upld(filedata){ //function to get the path of the files to be upl
 			high=filedata.length;
 		}
 		if(low<filedata.length){
-			upld(filedata);
+			return upld(filedata);
+		}
+		else{
+			return new Promise((resolve, reject)=>{
+				resolve(updateStatus(filedata, eng_upload_name, hindi_upload_name))
+			})
 		}		
 	})
 	.catch((err)=>{ //if any of the file for a batch is not able to upload then calling the 'upld' function to upload the next batch
@@ -91,13 +107,31 @@ async function upld(filedata){ //function to get the path of the files to be upl
 			high=filedata.length;
 		}
 		if(low<filedata.length){
-			upld(filedata);
+			return upld(filedata);
 		}
+		else{
+			return new Promise((resolve, reject)=>{
+				resolve(updateStatus(filedata, eng_upload_name, hindi_upload_name))
+			})
+		}	
 	});
 }
 async function up(){
 	const filedata = await getdata();
 	console.log('File upload starting');
-	upld(filedata);
+	await upld(filedata);
+	return new Promise((resolve,reject)=>{
+		resolve();
+	})
 }
-module.exports = up;
+const updateStatus = async (filedata, eng_upload_name, hindi_upload_name)=>{ //function that updates the upload names of the files in S3 in the CSV file 
+	await updateName(filedata, eng_upload_name, hindi_upload_name);
+	return new Promise((resolve,reject)=>{
+		resolve(console.log());
+	})
+}
+module.exports = {
+	up,
+	s3_Url_english,
+	s3_Url_hindi,
+};

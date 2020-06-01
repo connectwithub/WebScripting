@@ -8,7 +8,8 @@ const fetchData = async () => {
 	const result = await axios.get(siteUrl);  //making HTTP request to get the website's content
   	return cheerio.load(result.data);  //loading HTML code of the website and returning a Cheerio instance
 };
-const scrap = async ($,str, subject) => { //function to extract data from the tables with download links for each subject 	
+const scrap = async ($,str, subject) => { //function to extract data from the tables with download links for each subject 
+	return new Promise((resolve, reject) =>{	
 	$(str).each((index,element) => { //extracting data from the table for each subject 	
   		let engchap= $(element).find("td:first-child").text(); //variable to store Chapters in English for the subject 
         let hindichap= $(element).find("td:nth-child(2)").text(); //variable to store Chapters in Hindi for the subject 
@@ -48,7 +49,9 @@ const scrap = async ($,str, subject) => { //function to extract data from the ta
 						hindilk: hindilink
 		})
 		}
-  	});	
+	});
+	resolve();
+	})  	
 }
 const subjectArr = ($,str)=> { //function for finding the all the subjects for which each links are given in the tables and storing them in the subarr array  
 	let w1=$(str).text().indexOf("0");
@@ -74,5 +77,4 @@ const getResults = async () => { //function to extract data from website and sto
 		allSubjects //returning the all allSubjects array
 	};
 }
-//getResults();
 module.exports = getResults;

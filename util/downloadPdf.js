@@ -73,12 +73,14 @@ const startDownload= async (retdata) => { //function for downloading files
 		high=high+5;
 		if(high>retdata.length){
 			high=retdata.length;
-			return new Promise((resolve, reject)=>{
-				resolve(updateStatus(retdata, eng_down_status, hindi_down_status))
-			})
 		}
 		if(low<retdata.length){
 			return startDownload(retdata);
+		}
+		else{
+			return new Promise((resolve, reject)=>{
+				resolve(updateStatus(retdata, eng_down_status, hindi_down_status))
+			})
 		}		
 	})
 	.catch((err)=>{ //if any of the file for a batch is not able to download then calling the startDownload function to download the next batch
@@ -86,12 +88,14 @@ const startDownload= async (retdata) => { //function for downloading files
 		high=high+5;
 		if(high>retdata.length){
 			high=retdata.length;
-			return new Promise((resolve, reject)=>{
-				resolve(updateStatus(retdata, eng_down_status, hindi_down_status))
-			})
 		}
 		if(low<retdata.length){
 			return startDownload(retdata);
+		}
+		else{
+			return new Promise((resolve, reject)=>{
+				resolve(updateStatus(retdata, eng_down_status, hindi_down_status))
+			})
 		}
 	});
 }

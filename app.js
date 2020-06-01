@@ -1,10 +1,9 @@
 var createError = require('http-errors');
 var express = require('express');                     
 var path = require('path');
-var config  = require('./config/config')
+var config  = require('./config/config');
 //var cookieParser = require('cookie-parser');
 //var logger = require('morgan');
-
 var indexRouter = require('./routes/index');
 
 var app = express();

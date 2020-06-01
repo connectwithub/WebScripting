@@ -1,6 +1,6 @@
 module.exports = {
     "server" : {
-        "port" : 9000
+        "port" : 3000
     },
     "scrap" : {
         "siteurl" : "https://byjus.com/ncert-books-for-class-10/"
@@ -11,5 +11,8 @@ module.exports = {
     "downloadpath" : {
        "drive" : "C",
        "folder" : "download1"
-   }
+    },
+    "mongodb" : {
+        "dbPath" : "mongodb://localhost:27017/subjectdb"
+    }
 }
