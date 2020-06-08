@@ -5,16 +5,16 @@ let SubjectModel = require('./dbschema')
 let s3_Url_eng = require('./../util/upload').s3_Url_english;
 let s3_Url_hin = require('./../util/upload').s3_Url_hindi;
 let i=j=-1;
-const dbstore = async ()=> { //function to store data in the database
+const dbstore = async (selClass, csvFilePath)=> { //function to store data in the database
     console.log('Storing data in database');
     return new Promise((resolve,reject)=>{
-	fs.createReadStream(config.csv.path)
+	fs.createReadStream(csvFilePath)
         .pipe(csv())
         .on('data', (data) => { //reading data(row) from the CSV file
             if(data.English_Chapter_S3upload_name){
                 i++; 
                 let retdata = new SubjectModel({
-                    class: "Class 10",
+                    class: selClass,
                     subjectName: data.Subject,
                     chapterLanguage: "English",
                     chapterName: data.English_Chapter_S3upload_name,
@@ -31,7 +31,7 @@ const dbstore = async ()=> { //function to store data in the database
             if(data.Hindi_Chapter_S3upload_name){
                 j++;
                 let retdata = new SubjectModel({
-                    class: "Class 10",
+                    class: selClass,
                     subjectName: data.Subject,
                     chapterLanguage: "Hindi",
                     chapterName: data.Hindi_Chapter_S3upload_name,

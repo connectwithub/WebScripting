@@ -13,7 +13,7 @@ let hindi_part; //variable to store the Hindi subpart of the Subject
 let eng_down_status = [];
 let hindi_down_status = [];
 async function dwnld (url1,subfold,nm) { //function to download the files from the url1 and store them in the specified path		
-	const path=Path.resolve(`${config.downloadpath.folder}\\\\${subfold}`,nm); //path where downloaded PDFs will be stored
+	const path=Path.join(`${config.downloadpath.drive}${config.downloadpath.folder}\\\\${subfold}`,nm); //path where downloaded PDFs will be stored
 	const response = await axios({ //initializing axios instance with the url, 'GET' method and stream value for responseType 
 		method: 'GET',
 		url: url1,
@@ -32,12 +32,15 @@ async function dwnld (url1,subfold,nm) { //function to download the files from t
 		})
 	})	
 };
-const startDownload= async (retdata) => { //function for downloading files 
+const startDownload= async (retdata, csvFilePath) => { //function for downloading files 
 	let promises=[]; //array to store a file to be downloaded
+	//console.log(csvFilePath);
 	for(let i=low;i<high;i++)
 	{	
 		eng_down_status[i] = undefined;
 		hindi_down_status[i] = undefined;
+		//if(retdata[i].Subject=="Maths")
+		//{
 		if(currSubject!==retdata[i].Subject) //Checking if the Subject has changed  
 		{
 			chno=1;
@@ -66,6 +69,7 @@ const startDownload= async (retdata) => { //function for downloading files
 					console.log(err.message)}));
 		}
 		chno=chno+1; //incrementing the chapter number
+		//}
 	}
 	await Promise.all(promises)
 	.then(()=>{ //if all files for a batch are downloaded then calling the startDownload function to download the next batch
@@ -75,11 +79,12 @@ const startDownload= async (retdata) => { //function for downloading files
 			high=retdata.length;
 		}
 		if(low<retdata.length){
-			return startDownload(retdata);
+			return startDownload(retdata, csvFilePath);
 		}
 		else{
+			//console.log(csvFilePath);
 			return new Promise((resolve, reject)=>{
-				resolve(updateStatus(retdata, eng_down_status, hindi_down_status))
+				resolve(updateStatus(retdata, eng_down_status, hindi_down_status, csvFilePath))
 			})
 		}		
 	})
@@ -90,17 +95,18 @@ const startDownload= async (retdata) => { //function for downloading files
 			high=retdata.length;
 		}
 		if(low<retdata.length){
-			return startDownload(retdata);
+			return startDownload(retdata, csvFilePath);
 		}
 		else{
 			return new Promise((resolve, reject)=>{
-				resolve(updateStatus(retdata, eng_down_status, hindi_down_status))
+				resolve(updateStatus(retdata, eng_down_status, hindi_down_status, csvFilePath))
 			})
 		}
 	});
 }
-const updateStatus = async (retdata, eng_down_status, hindi_down_status)=>{
-	await updateData(retdata, eng_down_status, hindi_down_status);
+const updateStatus = async (retdata, eng_down_status, hindi_down_status, csvFilePath)=>{
+	//console.log(csvFilePath);
+	await updateData(retdata, eng_down_status, hindi_down_status, csvFilePath);
 	return new Promise((resolve,reject)=>{
 		resolve(console.log());
 	})

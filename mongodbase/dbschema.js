@@ -6,4 +6,4 @@ let subjectSchema = new mongoose.Schema({
   chapterName: String,
   chapterUrl: String,
 })
-module.exports = mongoose.model('Subject', subjectSchema)
+module.exports = mongoose.model('cbsesubjects', subjectSchema)

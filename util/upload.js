@@ -1,6 +1,7 @@
 const getdata = require('./csvExtract');
 const uploadS3 = require('./upload-S3');
 const updateName = require('./update-CSVuploadName');
+const config = require('./../config/config')
 let engchapter_path = ''; //variable to store the path of the file in english(language) to be uploaded
 let hindichapter_path = ''; //variable to store the path of the file in hindi(language) to be uploaded
 let engchapter_awspath; //variable to store the path of the file in english(language) in AWS S3
@@ -15,7 +16,7 @@ let eng_upload_name = []; // array to store the names with which files (in Engli
 let hindi_upload_name = []; // array to store the names with which files (in Hindi) are uploaded to AWS S3
 let s3_Url_english = []; //array to store the Url of the files (in English) uploaded 
 let s3_Url_hindi = []; //array to store the Url of the files (in Hindi) uploaded
-async function upld(filedata){ //function to get the path of the files to be uploaded to AWS S3 and also determine their path in S3
+async function upld(filedata, selClass, csvFilePath){ //function to get the path of the files to be uploaded to AWS S3 and also determine their path in S3
     let promises=[]; //array to store a batch files to be uploaded to AWS S3
 	for(let i=low;i<high;i++)
 	{
@@ -40,20 +41,20 @@ async function upld(filedata){ //function to get the path of the files to be upl
 		{
 			if(filedata[i].English_Chapter_Status=='Downloaded') //Checking if the downloaded status of the English Chapter of the Subject is 'Downloaded' 
 			{	
-				engchapter_path = `C:/fnwebscrap/download1/${filedata[i].Subject}/${eng_part}${`-Chapter-${chno}(in-English).pdf`}`; //Finding the path where the file is stored
+				engchapter_path = `${config.uploadpath.drive}${config.uploadpath.folder}${filedata[i].Subject}/${eng_part}${`-Chapter-${chno}(in-English).pdf`}`; //Finding the path where the file is stored
 				if(filedata[i].Subject!='English')
 				{
-					engchapter_awspath = `Class10/${filedata[i].Subject}/English/${eng_part}${`-Chapter-${chno}(in-English).pdf`}`; //Determining the path of the file in AWS S3
+					engchapter_awspath = `${selClass}/${filedata[i].Subject}/English/${eng_part}${`-Chapter-${chno}(in-English).pdf`}`; //Determining the path of the file in AWS S3
 				}
 				else
 				{
-					engchapter_awspath = `Class10/${filedata[i].Subject}/${eng_part}${`-Chapter-${chno}(in-English).pdf`}`;	//Determining the path of the file in AWS S3 if the subject is English
+					engchapter_awspath = `${selClass}/${filedata[i].Subject}/${eng_part}${`-Chapter-${chno}(in-English).pdf`}`;	//Determining the path of the file in AWS S3 if the subject is English
 				}
 				promises.push(uploadS3(engchapter_path, engchapter_awspath, chno) //pushing the call to fileupload function in 'upload-S3.js' to the promises array
 							.then((val)=>{ 
 								uploadedCount++; //incrementing the uploaded files count
 								s3_Url_english.push(val[0]);
-								eng_upload_name[i] = `${eng_part}${`chapter${val[1]}(inEnglish)`}`;
+								eng_upload_name[i] = `${eng_part} ${`chapter${val[1]}`}`;
 								console.log(`Total files uploaded - ${uploadedCount}`)
 							})
 							.catch((err)=>{console.log(err)}));
@@ -63,20 +64,20 @@ async function upld(filedata){ //function to get the path of the files to be upl
 		{
 			if(filedata[i].Hindi_Chapter_Status=='Downloaded')
 			{
-				hindichapter_path = `C:/fnwebscrap/download1/${filedata[i].Subject}/${hindi_part}${`-Chapter-${chno}(in-Hindi).pdf`}`; //Finding the path where the file is stored
+				hindichapter_path = `${config.uploadpath.drive}${config.uploadpath.folder}${filedata[i].Subject}/${hindi_part}${`-Chapter-${chno}(in-Hindi).pdf`}`; //Finding the path where the file is stored
 				if(filedata[i].Subject!='Hindi')
 				{
-					hindichapter_awspath = `Class10/${filedata[i].Subject}/Hindi/${hindi_part}${`-Chapter-${chno}(in-Hindi).pdf`}`; //Determining the path of the file in AWS S3
+					hindichapter_awspath = `${selClass}/${filedata[i].Subject}/Hindi/${hindi_part}${`-Chapter-${chno}(in-Hindi).pdf`}`; //Determining the path of the file in AWS S3
 				}
 				else
 				{
-					hindichapter_awspath = `Class10/${filedata[i].Subject}/${hindi_part}${`-Chapter-${chno}(in-Hindi).pdf`}`; //Determining the path of the file in AWS S3 if the subject is Hindi
+					hindichapter_awspath = `${selClass}/${filedata[i].Subject}/${hindi_part}${`-Chapter-${chno}(in-Hindi).pdf`}`; //Determining the path of the file in AWS S3 if the subject is Hindi
 				}
 				promises.push(uploadS3(hindichapter_path, hindichapter_awspath, chno) //pushing the call to upload function in 'upload-S3.js' to promise array
 							.then((val)=>{ 
 								uploadedCount++; //incrementing the uploaded files count
 								s3_Url_hindi.push(val[0]);
-								hindi_upload_name[i] = `${hindi_part}${`chapter${val[1]}(inHindi)`}`;
+								hindi_upload_name[i] = `${hindi_part} ${`chapter${val[1]}`}`;
 								console.log(`Total files uploaded - ${uploadedCount}`)
 							})
 							.catch((err)=>{console.log(err)}));
@@ -92,11 +93,11 @@ async function upld(filedata){ //function to get the path of the files to be upl
 			high=filedata.length;
 		}
 		if(low<filedata.length){
-			return upld(filedata);
+			return upld(filedata, selClass, csvFilePath);
 		}
 		else{
 			return new Promise((resolve, reject)=>{
-				resolve(updateStatus(filedata, eng_upload_name, hindi_upload_name))
+				resolve(updateStatus(filedata, eng_upload_name, hindi_upload_name, csvFilePath))
 			})
 		}		
 	})
@@ -107,25 +108,25 @@ async function upld(filedata){ //function to get the path of the files to be upl
 			high=filedata.length;
 		}
 		if(low<filedata.length){
-			return upld(filedata);
+			return upld(filedata, selClass, csvFilePath);
 		}
 		else{
 			return new Promise((resolve, reject)=>{
-				resolve(updateStatus(filedata, eng_upload_name, hindi_upload_name))
+				resolve(updateStatus(filedata, eng_upload_name, hindi_upload_name, csvFilePath))
 			})
 		}	
 	});
 }
-async function up(){
-	const filedata = await getdata();
+async function up(selClass, csvFilePath){
+	const filedata = await getdata(csvFilePath);
 	console.log('File upload starting');
-	await upld(filedata);
+	await upld(filedata, selClass, csvFilePath);
 	return new Promise((resolve,reject)=>{
 		resolve();
 	})
 }
-const updateStatus = async (filedata, eng_upload_name, hindi_upload_name)=>{ //function that updates the upload names of the files in S3 in the CSV file 
-	await updateName(filedata, eng_upload_name, hindi_upload_name);
+const updateStatus = async (filedata, eng_upload_name, hindi_upload_name, csvFilePath)=>{ //function that updates the upload names of the files in S3 in the CSV file 
+	await updateName(filedata, eng_upload_name, hindi_upload_name, csvFilePath);
 	return new Promise((resolve,reject)=>{
 		resolve(console.log());
 	})

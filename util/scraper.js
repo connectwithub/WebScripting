@@ -53,12 +53,15 @@ const scrap = async ($,str, subject) => { //function to extract data from the ta
 	resolve();
 	})  	
 }
-const subjectArr = ($,str)=> { //function for finding the all the subjects for which each links are given in the tables and storing them in the subarr array  
-	let w1=$(str).text().indexOf("0");
+const subjectArr = ($, str, selClass)=> { //function for finding the all the subjects for which each links are given in the tables and storing them in the subarr array  
+	let w1=($(str).text().indexOf(selClass))+(selClass.length+1);
+	/*console.log(selClass.length);
+	console.log(w1);
+	console.log(selClass);*/
 	let w2=$(str).text().indexOf("Book");
-	return $(str).text().substring(w1+2,w2-1);
+	return $(str).text().substring(w1,w2-1);
 }
-const getResults = async () => { //function to extract data from website and store it in an array
+const getResults = async (selClass) => { //function to extract data from website and store it in an array
 	const $ = await fetchData();
 	let query=$("article div.table-responsive table");
 	let start = 2;
@@ -67,7 +70,7 @@ const getResults = async () => { //function to extract data from website and sto
 	let subarr = []; //array to store all the subjects
 	for(let j=0;j<query2.length;j++)
 	{
-		subarr[j] = subjectArr($,`article h3:nth-of-type(${j+1})`); //calling subjectArr function to find all the subjects that have download links and storing them in the subarr array
+		subarr[j] = subjectArr($,`article h3:nth-of-type(${j+1})`, selClass); //calling subjectArr function to find all the subjects that have download links and storing them in the subarr array
 	}
 	for(let i=start;i<=end;i++) //calling the function scrap for the table with links for each subject
 	{
