@@ -24,6 +24,8 @@ async function upld(filedata, selClass, csvFilePath){ //function to get the path
 		hindichapter_path = '';
 		eng_upload_name[i] = undefined;
 		hindi_upload_name[i] = undefined;
+		//if(filedata[i].Subject==="Science")
+		//{
         if(currSubject!== filedata[i].Subject) //Finding if the Subject has changed  
 		{
 			chno=1;
@@ -84,6 +86,7 @@ async function upld(filedata, selClass, csvFilePath){ //function to get the path
 			}
         }
 		chno=chno+1; //incrementing the chapter number
+		//}
 	}
 	await Promise.all(promises)
 	.then(()=>{ //if all files for a batch are uploaded then calling the 'upld' function to upload the next batch

@@ -3,18 +3,18 @@ module.exports = {
         "port" : 3000
     },
     "scrap" : {
-        "siteurl" : "https://byjus.com/ncert-books-for-class-10/"
+        "siteurl" : "https://byjus.com/ncert-books-for-class-12/"
     },
-    "csv" : {
-        "path" : 'C:/Users/Gaurav Trikha/Documents/fnwebscrap/store.csv'
-    },
+    /*"csv" : {
+        "path" : 'C:/Users/Gaurav Trikha/Documents/fnwebscrap/store81.csv'
+    },*/
     "downloadpath" : {
        "drive" : "C:/",
-       "folder" : "Users/Gaurav Trikha/Documents/fnwebscrap/download1"
+       "folder" : "Users/Gaurav Trikha/Documents/fnwebscrap/download12"
     },
     "uploadpath" : {
         "drive" : "C:/",
-        "folder" : "Users/Gaurav Trikha/Documents/fnwebscrap/download1/"
+        "folder" : "Users/Gaurav Trikha/Documents/fnwebscrap/download12/"
      },
     "mongodb" : {
         "dbPath" : "mongodb://localhost:27017/subjectdb"

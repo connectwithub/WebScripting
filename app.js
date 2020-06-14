@@ -18,7 +18,6 @@ const dbFind = require('./mongodbase/dbfind');
 
 
 var app = express();
-console.log(1);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -43,7 +42,7 @@ app.use(express.json());
 app.use('/download', indexDownloadRouter);
 app.use('/upload', indexUploadRouter);
 app.use('/dbstore', indexDatabaseRouter);
-app.use('/api/classdashboard/subjectdashboard', indexDatabaseRouter);
+app.use('/api/Class10', indexDatabaseRouter);
 
 
 

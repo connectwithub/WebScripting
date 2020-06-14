@@ -32,6 +32,22 @@ async function dwnld (url1,subfold,nm) { //function to download the files from t
 		})
 	})	
 };
+const stringCheck = async (subunit_part)=>{
+	return new Promise((resolve, reject)=>{
+		for(let m=0;m<subunit_part.length;m++)
+		{
+			if(subunit_part.charAt(m)==='/'||subunit_part.charAt(m)==='<'||subunit_part.charAt(m)===':')
+			{
+				console.log();
+            	//eng_part.charAt(m)=' ';
+            	subunit_part = subunit_part.substring(0,m);
+            }
+            //console.log(eng_part.charAt(m))
+		}
+		console.log("Sub-unit:", subunit_part);
+		resolve(subunit_part);
+	})
+}
 const startDownload= async (retdata, csvFilePath) => { //function for downloading files 
 	let promises=[]; //array to store a file to be downloaded
 	//console.log(csvFilePath);
@@ -39,7 +55,7 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 	{	
 		eng_down_status[i] = undefined;
 		hindi_down_status[i] = undefined;
-		//if(retdata[i].Subject=="Maths")
+		//if(retdata[i].Subject=="Science")
 		//{
 		if(currSubject!==retdata[i].Subject) //Checking if the Subject has changed  
 		{
@@ -51,8 +67,12 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 		if((!retdata[i].English_Link)&&(!retdata[i].Hindi_Link)) //Checking if the Subject has a subpart(unit) or not
 		{
 			chno=0;
+			
+			retdata[i].English_Chapter = await stringCheck(retdata[i].English_Chapter);
+			retdata[i].Hindi_Chapter = await stringCheck(retdata[i].Hindi_Chapter);
 			eng_part=retdata[i].English_Chapter;
 			hindi_part=retdata[i].Hindi_Chapter;
+			
 		}
 		if(retdata[i].English_Link) //Checking if the subject has a link for the English Chapters
 		{
