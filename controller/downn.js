@@ -4,8 +4,8 @@ const downloadPdf = require("../util/downloadPdf");
 const getResults = require("../util/scraper.js")
 let extdata;
 let status;
-const stdown = async (selClass, csvFilePath, tableStart, subjectArray) =>{ //function that calls storedata, getadata and dwonloadPdf functions 
-    const result = await getResults(selClass, tableStart, subjectArray);
+const stdown = async (selClass, csvFilePath, tableStart, subjectArray, skipTable) =>{ //function that calls storedata, getadata and dwonloadPdf functions 
+    const result = await getResults(selClass, tableStart, subjectArray, skipTable);
     await storeData(result, csvFilePath);
     extdata = await getdata(csvFilePath);
     //console.log(csvFilePath);

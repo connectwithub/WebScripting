@@ -55,7 +55,7 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 	{	
 		eng_down_status[i] = undefined;
 		hindi_down_status[i] = undefined;
-		//if(retdata[i].Subject=="Science")
+		//if(retdata[i].Subject=="English")
 		//{
 		if(currSubject!==retdata[i].Subject) //Checking if the Subject has changed  
 		{
@@ -66,13 +66,18 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 		}
 		if((!retdata[i].English_Link)&&(!retdata[i].Hindi_Link)) //Checking if the Subject has a subpart(unit) or not
 		{
+			if(retdata[i].English_Chapter||retdata[i].Hindi_Chapter)
+			{
 			chno=0;
 			
 			retdata[i].English_Chapter = await stringCheck(retdata[i].English_Chapter);
 			retdata[i].Hindi_Chapter = await stringCheck(retdata[i].Hindi_Chapter);
 			eng_part=retdata[i].English_Chapter;
 			hindi_part=retdata[i].Hindi_Chapter;
-			
+			}
+			else{
+				chno = chno-1;
+			}
 		}
 		if(retdata[i].English_Link) //Checking if the subject has a link for the English Chapters
 		{
@@ -80,6 +85,12 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 					.then(()=>{eng_down_status[i] = "Downloaded"})
 					.catch((err)=>{eng_down_status[i] = "Error in Downloading";
 					console.log(err.message)}));
+					if(retdata[i+1])
+					{
+					if(!retdata[i+1].English_Link&&retdata[i+1].Hindi_Link){
+						chno=0;
+					}
+					}
 		}
 		if(retdata[i].Hindi_Link) //Checking if the subject has a link for the Hindi Chapters
 		{
@@ -99,10 +110,18 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 			high=retdata.length;
 		}
 		if(low<retdata.length){
+			//console.log(retdata.length);
+			//console.log(high);
+			//console.log(low);
+			/*return new Promise((resolve,reject)=>{ 
+				resolve(startDownload(retdata, csvFilePath));
+			})*/
+			//await startDownload(retdata,csvFilePath);
 			return startDownload(retdata, csvFilePath);
 		}
 		else{
 			//console.log(csvFilePath);
+			console.log('Calling updateCSV from then')
 			return new Promise((resolve, reject)=>{
 				resolve(updateStatus(retdata, eng_down_status, hindi_down_status, csvFilePath))
 			})
@@ -115,9 +134,14 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 			high=retdata.length;
 		}
 		if(low<retdata.length){
-			return startDownload(retdata, csvFilePath);
+			console.log(1);
+			/*return new Promise((resolve,reject)=>{ 
+				resolve(startDownload(retdata, csvFilePath));
+			})*/
+			return resolve(startDownload(retdata, csvFilePath));
 		}
 		else{
+			console.log(err);
 			return new Promise((resolve, reject)=>{
 				resolve(updateStatus(retdata, eng_down_status, hindi_down_status, csvFilePath))
 			})

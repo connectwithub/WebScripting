@@ -4,6 +4,7 @@ const config = require("./../config/config")
 let allSubjects; //Array to store all the details about subjects
 const siteUrl = config.scrap.siteurl;
 let extraChapters = [];
+let hindiCounter;
 const fetchData = async () => {
 	allSubjects = [];
 	const result = await axios.get(siteUrl);  //making HTTP request to get the website's content
@@ -23,6 +24,7 @@ const storeExtra = async(extraChap)=>{//function to store data(in the second col
 }
 const scrap = async ($,str, subject) => { //function to extract data from the tables with download links for each subject
 	extraChapters = []; 
+	hindiCounter = -1;
 	return new Promise((resolve, reject) =>{	
 	$(str).each((index,element) => { //extracting data from the table for each subject 	
   		let engchap= $(element).find("td:first-child").text(); //variable to store Chapters in English for the subject 
@@ -69,14 +71,37 @@ const scrap = async ($,str, subject) => { //function to extract data from the ta
 
 			engchap= $(element).find("td:first-child").text();
 			englink= $(element).find("td:first-child a").attr('href');
-			if(!engchap) //Checking if the variable hindichap contains the sub-units for Hindi subject 
-			{
+			hindichap = undefined;
+			hindilink = undefined;
+			if(!engchap&&($(element).find("th:first-child").text())){
 				engchap=$(element).find("th:first-child").text();
+				hindichap = undefined;
+				hindilink = undefined; 
 			}
-			hindichap= undefined;
-			hindilink= undefined;
+			else if(engchap&&(!englink))
+			{
+				engchap=undefined;
+				englink=undefined;
+				//hindichap=undefined;
+				//engchap=undefined;
+			}
+			/*if(englink)
+			{
+				if(!engchap) //Checking if the variable hindichap contains the sub-units for Hindi subject 
+				{
+					engchap=$(element).find("th:first-child").text();
+				}
+				hindichap= undefined;
+				hindilink= undefined;
+			}
+			else{
+				engchap=undefined;
+				englink=undefined;
+				hindichap=undefined;
+				engchap=undefined;
+			}*/
 
-			if($(element).find("td:nth-child(2)"))
+			if($(element).find("td:nth-child(2)").text()||$(element).find("th:nth-child(2)").text())
 			{
 				let extraEngChapters = $(element).find("td:nth-child(2)").text();
 				let extraEngLink = $(element).find("td:nth-child(2) a").attr('href');
@@ -84,6 +109,7 @@ const scrap = async ($,str, subject) => { //function to extract data from the ta
 				{
 					extraEngChapters=$(element).find("th:nth-child(2)").text();
 				}
+				//console.log(extraEngChapters);
 				let extraHindiChapters= undefined;
 				let extraHindiLink= undefined;
 				console.log(extraEngChapters);
@@ -102,10 +128,57 @@ const scrap = async ($,str, subject) => { //function to extract data from the ta
 		else if(!engchap&&!hindichap) //Checking if both engchap and hindichap are undefined and if so then storing the sub-units in them
 		{
 			engchap= $(element).find("th:first-child").text();
-			hindichap= $(element).find("th:nth-child(2)").text();
-			if(hindichap==='')
+			if(subject.search("(hindi)")!=-1)
 			{
-				hindichap= undefined;
+				hindiCounter = 1;
+				hindichap = engchap;
+				engchap=undefined;
+				let len = subject.search("(hindi)");
+				subject = subject.substring(0,len-1);
+				console.log(len);
+				console.log(subject);
+			}
+			else
+			{
+				hindichap= $(element).find("th:nth-child(2)").text();
+				if(hindichap==='')
+				{
+					hindichap= undefined;
+				}
+			}
+		}
+		else if(!hindichap){
+			engchap = $(element).find("td:first-child").text();
+			englink= $(element).find("td:first-child a").attr('href');
+			if(hindiCounter===1)
+			{
+				hindichap = engchap;
+				hindilink = englink;
+				engchap = undefined;
+				englink = undefined;
+			}
+			else if(hindiCounter===-1){
+				if(subject.search("(hindi)")!=-1)
+				{
+				hindiCounter = 1;
+				hindichap = engchap;
+				hindilink = englink;
+				engchap=undefined;
+				englink=undefined;
+				let len = subject.search("(hindi)");
+				subject = subject.substring(0,len-1);
+				console.log(len);
+				console.log(subject);
+				}
+				/*else
+				{
+					hindichap= $(element).find("th:nth-child(2)").text();
+					if(hindichap==='')
+					{
+						hindichap= undefined;
+					}
+				}*/
+
 			}
 		}
 		/*else if(!hindichap) //Checking if only the hindichap in undefined
@@ -128,7 +201,7 @@ const scrap = async ($,str, subject) => { //function to extract data from the ta
 	resolve();
 	})  	
 }
-const getResults = async (selClass, tableStart, subjectArray) => { //function to extract data from website and store it in an array
+const getResults = async (selClass, tableStart, subjectArray, skipTable) => { //function to extract data from website and store it in an array
 	const $ = await fetchData();
 	let query=$("article div.table-responsive table");
 	let start = tableStart;
@@ -137,12 +210,16 @@ const getResults = async (selClass, tableStart, subjectArray) => { //function to
 	let subarr = subjectArray;//array to store all the subjects
 	console.log(end);
 	console.log(query2.length);
+	skipTable
 	console.log($("article h3:nth-of-type(1)").text());
 	console.log(subarr);
 	
 	for(let i=start;i<end;i++) //calling the function scrap for the table with links for each subject
 	{
-		await scrap($,`article div.table-responsive:nth-of-type(${i+1}) table:nth-child(1) tr`, subarr[i-start]); 
+		await scrap($,`article div.table-responsive:nth-of-type(${i+1}) table:nth-child(1) tr`, subarr[i-start]);
+		if(skipTable===1){
+			i=i+1;
+		} 
 	}
 	return {
 		allSubjects //returning the all allSubjects array
