@@ -80,8 +80,13 @@ const scrap = async ($,str, subject) => { //function to extract data from the ta
 			}
 			else if(engchap&&(!englink))
 			{
+				if($(element).find("td:first-child>strong").text()){
+					engchap=$(element).find("td:first-child>strong").text();
+				}
+				else{
 				engchap=undefined;
 				englink=undefined;
+				}
 				//hindichap=undefined;
 				//engchap=undefined;
 			}

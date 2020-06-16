@@ -10,6 +10,8 @@ let chno=0; //variable that stores the chapter number
 let currSubject=''; //variable that holds the current Subject whose chapters are being downloaded
 let eng_part; //variable to store the English subpart of the Subject
 let hindi_part; //variable to store the Hindi subpart of the Subject
+let common_eng_part;
+let common_hindi_part;
 let eng_down_status = [];
 let hindi_down_status = [];
 async function dwnld (url1,subfold,nm) { //function to download the files from the url1 and store them in the specified path		
@@ -63,6 +65,8 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 			currSubject= retdata[i].Subject; //making the new subject as the current Subject
 			eng_part='';
 			hindi_part='';
+			common_eng_part='';
+			common_hindi_part='';
 		}
 		if((!retdata[i].English_Link)&&(!retdata[i].Hindi_Link)) //Checking if the Subject has a subpart(unit) or not
 		{
@@ -72,13 +76,69 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 			
 			retdata[i].English_Chapter = await stringCheck(retdata[i].English_Chapter);
 			retdata[i].Hindi_Chapter = await stringCheck(retdata[i].Hindi_Chapter);
-			eng_part=retdata[i].English_Chapter;
-			hindi_part=retdata[i].Hindi_Chapter;
+			
+			if(retdata[i].Subject==='Hindi'){
+				/*if(hindi_part==='')
+				{
+					eng_part=retdata[i].English_Chapter;
+					hindi_part=retdata[i].Hindi_Chapter;
+					common_eng_part = eng_part;
+					common_hindi_part = hindi_part;
+					console.log(1);
+				}
+				else
+				{
+					eng_part=retdata[i].English_Chapter;
+					hindi_part=retdata[i].Hindi_Chapter;
+					eng_part = common_eng_part+eng_part;
+					hindi_part = common_hindi_part+hindi_part;
+					console.log(2);
+				}*/
+				if((!retdata[i+1].Hindi_Link)&&retdata[i+1].Hindi_Chapter){
+					common_eng_part = retdata[i].English_Chapter;
+					common_hindi_part = retdata[i].Hindi_Chapter;
+				}
+				else{
+					eng_part=retdata[i].English_Chapter;
+					hindi_part=retdata[i].Hindi_Chapter;
+					eng_part = `${common_eng_part} ${eng_part}`;
+					hindi_part = `${common_hindi_part} ${hindi_part}`;
+					console.log(2);
+				}
+			}
+			else{
+				eng_part=retdata[i].English_Chapter;
+				hindi_part=retdata[i].Hindi_Chapter;
+			}
 			}
 			else{
 				chno = chno-1;
 			}
 		}
+		if(retdata[i].English_Chapter==="Prelims"||retdata[i].English_Chapter==="Answers"||retdata[i].English_Chapter==="Brain Teaser"){
+			if(retdata[i].English_Link) //Checking if the subject has a link for the English Chapters
+			{
+				promises.push(dwnld(retdata[i].English_Link, retdata[i].Subject, `${retdata[i].English_Chapter}.pdf`)
+					.then(()=>{eng_down_status[i] = "Downloaded"})
+					.catch((err)=>{eng_down_status[i] = "Error in Downloading";
+					console.log(err.message)}));
+					if(retdata[i+1])
+					{
+						if(!retdata[i+1].English_Link&&retdata[i+1].Hindi_Link){
+							chno=0;
+						}
+					}	
+			}
+			if(retdata[i].Hindi_Link) //Checking if the subject has a link for the Hindi Chapters
+			{
+				promises.push(dwnld(retdata[i].Hindi_Link, retdata[i].Subject, `${retdata[i].Hindi_Chapter}.pdf`)
+					.then(()=> {hindi_down_status[i] = "Downloaded"})
+					.catch((err)=>{hindi_down_status[i] = "Error in Downloading";
+					console.log(err.message)}));
+			}		
+			chno=chno-1;	
+		}
+		else{
 		if(retdata[i].English_Link) //Checking if the subject has a link for the English Chapters
 		{
 			promises.push(dwnld(retdata[i].English_Link, retdata[i].Subject, eng_part+`-Chapter-${chno}(in-English).pdf`)
@@ -98,6 +158,7 @@ const startDownload= async (retdata, csvFilePath) => { //function for downloadin
 					.then(()=> {hindi_down_status[i] = "Downloaded"})
 					.catch((err)=>{hindi_down_status[i] = "Error in Downloading";
 					console.log(err.message)}));
+		}
 		}
 		chno=chno+1; //incrementing the chapter number
 		//}

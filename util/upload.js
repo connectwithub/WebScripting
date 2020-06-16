@@ -24,7 +24,7 @@ async function upld(filedata, selClass, csvFilePath){ //function to get the path
 		hindichapter_path = '';
 		eng_upload_name[i] = undefined;
 		hindi_upload_name[i] = undefined;
-		//if(filedata[i].Subject==="Science")
+		//if(filedata[i].Subject==="Hindi")
 		//{
         if(currSubject!== filedata[i].Subject) //Finding if the Subject has changed  
 		{
@@ -32,13 +32,124 @@ async function upld(filedata, selClass, csvFilePath){ //function to get the path
 			currSubject= filedata[i].Subject; //Making the new subject as the current Subject
 			eng_part='';
 			hindi_part='';
+			common_eng_part='';
+			common_hindi_part='';
 		}
 		if((!filedata[i].English_Link)&&(!filedata[i].Hindi_Link)) //Finding if the Subject has a subpart(unit) or not
 		{
-			chno=0;
+			/*chno=0;
 			eng_part= filedata[i].English_Chapter;
-            hindi_part= filedata[i].Hindi_Chapter;
+			hindi_part= filedata[i].Hindi_Chapter;
+			*/
+
+			if(filedata[i].English_Chapter||filedata[i].Hindi_Chapter)
+			{
+			chno=0;
+			
+			//retdata[i].English_Chapter = await stringCheck(retdata[i].English_Chapter);
+			//retdata[i].Hindi_Chapter = await stringCheck(retdata[i].Hindi_Chapter);
+			
+			if(filedata[i].Subject==='Hindi'){
+				
+				if((!filedata[i+1].Hindi_Link)&&filedata[i+1].Hindi_Chapter){
+					common_eng_part = filedata[i].English_Chapter;
+					common_hindi_part = filedata[i].Hindi_Chapter;
+				}
+				else{
+					eng_part = filedata[i].English_Chapter;
+					hindi_part = filedata[i].Hindi_Chapter;
+					eng_part = `${common_eng_part} ${eng_part}`;
+					hindi_part = `${common_hindi_part} ${hindi_part}`;
+					console.log(2);
+				}
+			}
+			else{
+				eng_part = filedata[i].English_Chapter;
+				hindi_part = filedata[i].Hindi_Chapter;
+			}
+			}
+			else{
+				chno = chno-1;
+			}
 		}
+		if(filedata[i].English_Chapter==="Prelims"||filedata[i].English_Chapter==="Answers"||filedata[i].English_Chapter==="Brain Teaser"){
+			/*if(filedata[i].English_Link&&filedata[i].English_Chapter_Status=='Downloaded') //Checking if the subject has a link for the English Chapters
+			{
+				promises.push(dwnld(retdata[i].English_Link, retdata[i].Subject, `${retdata[i].English_Chapter}.pdf`)
+					.then(()=>{eng_down_status[i] = "Downloaded"})
+					.catch((err)=>{eng_down_status[i] = "Error in Downloading";
+					console.log(err.message)}));
+					if(retdata[i+1])
+					{
+						if(!retdata[i+1].English_Link&&retdata[i+1].Hindi_Link){
+							chno=0;
+						}
+					}	
+			}
+			if(retdata[i].Hindi_Link) //Checking if the subject has a link for the Hindi Chapters
+			{
+				promises.push(dwnld(retdata[i].Hindi_Link, retdata[i].Subject, `${retdata[i].Hindi_Chapter}.pdf`)
+					.then(()=> {hindi_down_status[i] = "Downloaded"})
+					.catch((err)=>{hindi_down_status[i] = "Error in Downloading";
+					console.log(err.message)}));
+			}		
+			chno=chno-1;*/
+			if(filedata[i].English_Link) //Finding if the subject has a link for the English Chapters
+			{
+				if(filedata[i].English_Chapter_Status=='Downloaded') //Checking if the downloaded status of the English Chapter of the Subject is 'Downloaded' 
+				{	
+					engchapter_path = `${config.uploadpath.drive}${config.uploadpath.folder}${filedata[i].Subject}/${`${filedata[i].English_Chapter}.pdf`}`; //Finding the path where the file is stored
+					if(filedata[i].Subject!='English')
+					{
+						engchapter_awspath = `${selClass}/${filedata[i].Subject}/English/${`${filedata[i].English_Chapter}.pdf`}`; //Determining the path of the file in AWS S3
+					}
+					else
+					{
+						engchapter_awspath = `${selClass}/${filedata[i].Subject}/${`${filedata[i].English_Chapter}.pdf`}`;	//Determining the path of the file in AWS S3 if the subject is English
+					}
+					promises.push(uploadS3(engchapter_path, engchapter_awspath, chno) //pushing the call to fileupload function in 'upload-S3.js' to the promises array
+								.then((val)=>{ 
+									uploadedCount++; //incrementing the uploaded files count
+									s3_Url_english.push(val[0]);
+									eng_upload_name[i] = `${eng_part} ${`chapter${val[1]}`}`;
+									console.log(`Total files uploaded - ${uploadedCount}`)
+								})
+								.catch((err)=>{console.log(err)}));
+								if(filedata[i+1])
+								{
+									if(!filedata[i+1].English_Link&&filedata[i+1].Hindi_Link){
+										chno=0;
+									}
+								}
+				}
+			}
+			if(filedata[i].Hindi_Link) //Finding if the subject has a link for the Hindi Chapters
+			{
+				if(filedata[i].Hindi_Chapter_Status=='Downloaded')
+				{
+					hindichapter_path = `${config.uploadpath.drive}${config.uploadpath.folder}${filedata[i].Subject}/${`${filedata[i].Hindi_Chapter}.pdf`}`; //Finding the path where the file is stored
+					if(filedata[i].Subject!='Hindi')
+					{
+						hindichapter_awspath = `${selClass}/${filedata[i].Subject}/Hindi/${`${filedata[i].Hindi_Chapter}.pdf`}`; //Determining the path of the file in AWS S3
+					}
+					else
+					{
+						hindichapter_awspath = `${selClass}/${filedata[i].Subject}/${`${filedata[i].Hindi_Chapter}.pdf`}`; //Determining the path of the file in AWS S3 if the subject is Hindi
+					}
+					promises.push(uploadS3(hindichapter_path, hindichapter_awspath, chno) //pushing the call to upload function in 'upload-S3.js' to promise array
+								.then((val)=>{ 
+									uploadedCount++; //incrementing the uploaded files count
+									s3_Url_hindi.push(val[0]);
+									hindi_upload_name[i] = `${hindi_part} ${`chapter${val[1]}`}`;
+									console.log(`Total files uploaded - ${uploadedCount}`)
+								})
+								.catch((err)=>{console.log(err)}));
+				}
+			}
+			chno = chno-1;
+
+		}
+		else{
 		if(filedata[i].English_Link) //Finding if the subject has a link for the English Chapters
 		{
 			if(filedata[i].English_Chapter_Status=='Downloaded') //Checking if the downloaded status of the English Chapter of the Subject is 'Downloaded' 
@@ -60,6 +171,12 @@ async function upld(filedata, selClass, csvFilePath){ //function to get the path
 								console.log(`Total files uploaded - ${uploadedCount}`)
 							})
 							.catch((err)=>{console.log(err)}));
+							if(filedata[i+1])
+							{
+								if(!filedata[i+1].English_Link&&filedata[i+1].Hindi_Link){
+									chno=0;
+								}
+							}
 			}
 		}
 		if(filedata[i].Hindi_Link) //Finding if the subject has a link for the Hindi Chapters
@@ -84,7 +201,8 @@ async function upld(filedata, selClass, csvFilePath){ //function to get the path
 							})
 							.catch((err)=>{console.log(err)}));
 			}
-        }
+		}
+		}
 		chno=chno+1; //incrementing the chapter number
 		//}
 	}
