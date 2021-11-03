@@ -21,6 +21,6 @@
     "morgan": "~1.9.1",
     "unzip": "^0.1.11",
     "unzipper": "^0.10.11",
-    "validator": "^13.0.0"
+    "validator": "^13.7.0"
   }
 }
